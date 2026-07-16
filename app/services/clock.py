@@ -25,9 +25,10 @@ def _rtl(text):
 
 VALID_FONTS = {
     "DavidLibre-Bold", "FrankRuhlLibre-Bold", "FrankRuhlLibre",
-    "Heebo-Bold", "NotoSansHebrew-Bold",
+    "Heebo-Bold", "NotoSansHebrew-Bold", "EFT-Tefilot-Bold", "EFT-Tefilot",
 }
 DEFAULT_FONT = "NotoSansHebrew-Bold"
+TIME_FONT = "EFT-Tefilot-Bold"
 
 # ── Hebrew time tables ────────────────────────────────
 
@@ -346,7 +347,7 @@ def generate_clock_image(
     time_lines  = [l for l in lines if l not in PERIOD_WORDS]
     period_line = next((l for l in lines if l in PERIOD_WORDS), "")
 
-    font_large  = get_font(100, fn)
+    font_large  = get_font(100, TIME_FONT)
     font_medium = get_font(58,  fn)
     font_small  = get_font(34,  fn)
 
@@ -371,7 +372,7 @@ def generate_clock_image(
             current_size = getattr(f, "size", 100)
             if current_size <= 40:
                 break
-            f = get_font(current_size - 6, fn)
+            f = get_font(current_size - 6, TIME_FONT)
         draw.text((W // 2, ty + i * line_h), rtl_line, font=f, fill=0, anchor="mm")
 
     # ── Smart banner ─────────────────────────────────

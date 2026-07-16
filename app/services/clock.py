@@ -13,12 +13,15 @@ from app.services.motivations import get_random_quote
 from app.services.zmanim import _omer_text
 
 try:
-    from bidi.algorithm import get_display
-    def _rtl(text):
-        return get_display(text) if text else text
+    from bidi import get_display
 except ImportError:
-    def _rtl(text):
-        return text
+    try:
+        from bidi.algorithm import get_display
+    except ImportError:
+        get_display = None
+
+def _rtl(text):
+    return get_display(text) if text and get_display else text
 
 VALID_FONTS = {
     "DavidLibre-Bold", "FrankRuhlLibre-Bold", "FrankRuhlLibre",

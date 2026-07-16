@@ -10,7 +10,5 @@ services:
         value: .
       - key: DISPLAY_LAG
         value: 8
-        sync: false
       - key: LOG_LEVEL
         value: info
-        sync: false

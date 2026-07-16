@@ -3,6 +3,7 @@ import datetime
 import io
 import math
 import random
+import unicodedata
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -20,8 +21,14 @@ except ImportError:
     except ImportError:
         get_display = None
 
+def _strip_niqqud(text: str) -> str:
+    return "".join(c for c in text if not unicodedata.combining(c))
+
 def _rtl(text):
-    return get_display(text) if text and get_display else text
+    if not text:
+        return text
+    text = _strip_niqqud(text)
+    return get_display(text) if get_display else text
 
 VALID_FONTS = {
     "DavidLibre-Bold", "FrankRuhlLibre-Bold", "FrankRuhlLibre",

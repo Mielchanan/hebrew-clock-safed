@@ -87,14 +87,14 @@ def get_font(size: int, font_name: str = DEFAULT_FONT) -> ImageFont.FreeTypeFont
     path = settings.font_dir / f"{name}.ttf"
     if path.exists():
         try:
-            return ImageFont.truetype(str(path), size)
+            return ImageFont.truetype(str(path), size, layout_engine=ImageFont.Layout.BASIC)
         except Exception:
             pass
     for fallback in ("NotoSansHebrew-Bold", "FrankRuhlLibre"):
         fb = settings.font_dir / f"{fallback}.ttf"
         if fb.exists():
             try:
-                return ImageFont.truetype(str(fb), size)
+                return ImageFont.truetype(str(fb), size, layout_engine=ImageFont.Layout.BASIC)
             except Exception:
                 pass
     return ImageFont.load_default()
@@ -498,3 +498,9 @@ def log_available_fonts() -> None:
         logger.info("available fonts: {}", ", ".join(sorted(found)))
     else:
         logger.warning("no Hebrew font files found in {}", settings.font_dir)
+
+    from PIL import features as _pil_features
+    module = get_display.__module__ if get_display else "NONE (fallback identity)"
+    sample = _rtl("שלום עולם")
+    logger.info("bidi impl: {} | raqm available: {} | 'שלום עולם' -> '{}'",
+                module, _pil_features.check("raqm"), sample)

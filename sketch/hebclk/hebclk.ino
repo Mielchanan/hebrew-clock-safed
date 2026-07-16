@@ -411,7 +411,6 @@ void setup() {
                        "Then open:   " + ip);
     });
 
-    wm.resetSettings();
     if (!wm.autoConnect("EPaper-Setup")) {
         Serial.println("WiFi failed — restarting");
         ESP.restart();

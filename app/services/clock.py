@@ -206,33 +206,6 @@ def _draw_weather_icon(draw: ImageDraw.Draw, cx: int, cy: int,
         draw.line(pts, fill=0, width=3)
 
 
-def _draw_analog_clock(draw: ImageDraw.Draw, cx: int, cy: int, r: int,
-                       h24: int, m: int, font_name: str) -> None:
-    draw.ellipse([cx - r, cy - r, cx + r, cy + r], outline=0, width=3)
-    for i in range(12):
-        angle = math.radians(i * 30 - 90)
-        if i % 3 == 0:
-            draw.line([cx + (r - 4)  * math.cos(angle), cy + (r - 4)  * math.sin(angle),
-                       cx + (r - 12) * math.cos(angle), cy + (r - 12) * math.sin(angle)],
-                      fill=0, width=3)
-        else:
-            draw.line([cx + (r - 4) * math.cos(angle), cy + (r - 4) * math.sin(angle),
-                       cx + (r - 9) * math.cos(angle), cy + (r - 9) * math.sin(angle)],
-                      fill=0, width=2)
-    num_font = get_font(max(12, r // 4), font_name)
-    for num, deg in ((12, -90), (3, 0), (6, 90), (9, 180)):
-        angle = math.radians(deg)
-        draw.text((cx + (r - 18) * math.cos(angle), cy + (r - 18) * math.sin(angle)),
-                  str(num), font=num_font, fill=0, anchor="mm")
-    h12 = h24 % 12
-    hour_angle = math.radians((h12 + m / 60) * 30 - 90)
-    draw.line([cx, cy, cx + (r * 0.55) * math.cos(hour_angle),
-               cy + (r * 0.55) * math.sin(hour_angle)], fill=0, width=4)
-    min_angle = math.radians(m * 6 - 90)
-    draw.line([cx, cy, cx + (r * 0.75) * math.cos(min_angle),
-               cy + (r * 0.75) * math.sin(min_angle)], fill=0, width=2)
-    draw.ellipse([cx - 4, cy - 4, cx + 4, cy + 4], fill=0)
-
 # ── Image generators ──────────────────────────────────
 
 def _generate_night_image(font_name: str) -> bytes:
@@ -368,16 +341,12 @@ def generate_clock_image(
     font_medium = get_font(58,  fn)
     font_small  = get_font(34,  fn)
 
-    clock_cx, clock_cy, clock_r = W // 2, PAD2 + 75, 68
-    _draw_analog_clock(draw, clock_cx, clock_cy, clock_r, h24, m, fn)
-
-    text_start_y = clock_cy + clock_r + 15
+    text_start_y = PAD2 + 20
     text_area_h  = H - 110 - text_start_y
     n            = len(time_lines)
     line_h       = 85
     total_h      = n * line_h
-    ty           = max(clock_cy + clock_r + 40,
-                       text_start_y + (text_area_h - total_h) // 2 + 10)
+    ty           = text_start_y + (text_area_h - total_h) // 2 + 10
 
     for i, line in enumerate(time_lines):
         rtl_line = _rtl(line)

@@ -26,9 +26,11 @@ def _rtl(text):
 VALID_FONTS = {
     "DavidLibre-Bold", "FrankRuhlLibre-Bold", "FrankRuhlLibre",
     "Heebo-Bold", "NotoSansHebrew-Bold", "EFT-Tefilot-Bold", "EFT-Tefilot",
+    "FbVilna-Bold", "FbVilna-Regular", "FbVilna-Light",
 }
 DEFAULT_FONT = "NotoSansHebrew-Bold"
-TIME_FONT = "EFT-Tefilot-Bold"
+TIME_FONT = "FbVilna-Regular"
+FONT_EXTENSIONS = (".ttf", ".otf")
 
 # ── Hebrew time tables ────────────────────────────────
 
@@ -83,17 +85,25 @@ def get_israel_time() -> datetime.datetime:
     return local + datetime.timedelta(seconds=settings.display_lag)
 
 
+def _find_font_file(name: str) -> Path | None:
+    for ext in FONT_EXTENSIONS:
+        path = settings.font_dir / f"{name}{ext}"
+        if path.exists():
+            return path
+    return None
+
+
 def get_font(size: int, font_name: str = DEFAULT_FONT) -> ImageFont.FreeTypeFont:
     name = font_name if font_name in VALID_FONTS else DEFAULT_FONT
-    path = settings.font_dir / f"{name}.ttf"
-    if path.exists():
+    path = _find_font_file(name)
+    if path:
         try:
             return ImageFont.truetype(str(path), size, layout_engine=ImageFont.Layout.BASIC)
         except Exception:
             pass
     for fallback in ("NotoSansHebrew-Bold", "FrankRuhlLibre"):
-        fb = settings.font_dir / f"{fallback}.ttf"
-        if fb.exists():
+        fb = _find_font_file(fallback)
+        if fb:
             try:
                 return ImageFont.truetype(str(fb), size, layout_engine=ImageFont.Layout.BASIC)
             except Exception:
@@ -347,7 +357,7 @@ def generate_clock_image(
     time_lines  = [l for l in lines if l not in PERIOD_WORDS]
     period_line = next((l for l in lines if l in PERIOD_WORDS), "")
 
-    font_large  = get_font(100, TIME_FONT)
+    font_large  = get_font(88, TIME_FONT)
     font_medium = get_font(58,  fn)
     font_small  = get_font(34,  fn)
 
@@ -493,8 +503,7 @@ def generate_clock_image(
 
 
 def log_available_fonts() -> None:
-    found = [f for f in VALID_FONTS
-             if (settings.font_dir / f"{f}.ttf").exists()]
+    found = [f for f in VALID_FONTS if _find_font_file(f)]
     if found:
         logger.info("available fonts: {}", ", ".join(sorted(found)))
     else:

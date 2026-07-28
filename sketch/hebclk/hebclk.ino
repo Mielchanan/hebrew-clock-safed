@@ -293,6 +293,8 @@ void fetchAndDisplay() {
         Serial.println("HTTP begin failed");
         return;
     }
+    http.setConnectTimeout(15000);
+    http.setTimeout(60000);   // Render free-tier cold start can take 50s+
 
     int code = http.GET();
     if (code != HTTP_CODE_OK) {

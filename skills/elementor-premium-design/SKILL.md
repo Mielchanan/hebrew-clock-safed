@@ -170,18 +170,84 @@ Rules for this setup:
 - Mobile: Lenis leaves touch scrolling native by default; keep it that way. Reduce or disable pinned and scrubbed sections under 768px with `gsap.matchMedia()`.
 - Use pin/scrub (ScrollTrigger) only for real storytelling: a product walkthrough, a process, a horizontal gallery. Simple "appear on scroll" does not need pinning.
 
-## 6. Commands
+## 6. Mobile that feels native
+
+Most "it feels cheap on the phone" problems are platform details, not design. Add this baseline once, in Site Settings > Custom CSS (or the child theme):
+
+```css
+html {
+  -webkit-tap-highlight-color: transparent; /* no gray flash on tap */
+  -webkit-text-size-adjust: 100%;
+}
+input, textarea, select { font-size: 16px; } /* below 16px iOS zooms into the field and stays zoomed */
+a, button, .elementor-button, [role="button"] { touch-action: manipulation; }
+.elementor-button, .e-n-tab-title, [role="button"] { -webkit-user-select: none; user-select: none; }
+.elementor-button:active { transform: scale(0.97); } /* press feedback for touch */
+.js-hero { min-height: 100svh; } /* use on the hero container instead of 100vh */
+```
+
+And in the page head (Elementor Custom Code, location `<head>`):
+
+```html
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0a">
+```
+
+Set both values to the header's actual background color, not the brand color.
+
+Rules:
+- **Never disable zoom.** No `user-scalable=no` or `maximum-scale=1`. The 16px input rule fixes the zoom problem instead.
+- **Hover only for mouse.** In custom CSS, put every `:hover` style inside `@media (hover: hover) and (pointer: fine)` so taps don't leave elements stuck in their hover state. Touch users get feedback through `:active`.
+- **Full-height sections:** `100svh` for heroes (stable while scrolling), `100dvh` only for app-like full screens. Plain `100vh` hides the bottom of the section under the mobile browser bar.
+- **Fixed bottom bars and floating buttons** (WhatsApp, call, cart) need `padding-bottom: env(safe-area-inset-bottom)` so they clear the iPhone home indicator.
+- **Carousels:** in RTL the swipe direction must match reading direction; a horizontal carousel gets `touch-action: pan-y` so the page can still scroll vertically over it.
+- **Form fields:** set the right keyboard (`type="tel"` for phone, `type="email"`, `inputmode="numeric"` for codes). Elementor Forms supports these field types; use them instead of plain text.
+- Touch targets at least 44x44px, including menu items and icons.
+- Device emulation in Chrome does not reproduce any of this. Say what was verified in code and ask the user to confirm on a real phone.
+
+## 7. Commands
 
 The user may ask for these by name. Each one is a focused pass.
 
 - **polish**: final quality pass, preserving the current design. Order: broken tasks and inaccessible paths, then missing states (hover, focus, disabled, loading, empty, error, success), then hierarchy and responsive drift, then visual and motion inconsistency, then cleanup. Check desktop, tablet and mobile.
+- **bolder**: amplify one named section that reads flat, and touch nothing else. Bring it up to the strongest moves the rest of the page already makes (its display type at full strength, its signature motif) instead of adding new effects, colors or fonts. Make one decisive move, then quiet everything around it. The result must look like the same brand, more sure of itself.
+- **quieter**: tone down a loud design without making it generic. Lower saturation (70-85%), fewer colors with neutrals doing the work, lighter weights (900 to 600, 700 to 500), more whitespace, thinner or no borders, shorter motion distances (10-20px), no bounce. Keep a few anchors bold; hierarchy must survive.
+- **audit**: technical report, no fixes. Score 0-4 each: Accessibility, Performance, Theming (globals vs hard-coded values), Responsive, Implementation integrity. Total out of 20. List issues by severity (P0 blocks a task, P1 major or WCAG AA failure, P2 minor, P3 polish) with location, impact and the command that fixes it. Include what works well.
+- **break**: stress-test with realistic worst-case content, then report. See section 8.
 - **distill**: strip to the essence. One primary goal and one primary action per page. Cut redundant sections, decoration, colors (1-2 plus neutrals), font sizes (3-4) and copy ("cut every sentence in half, then again"). Never remove information users need to decide.
 - **clarify**: rewrite UI copy so users know what happened, what matters and what to do next. Buttons name the action ("שליחת הטופס" / "Send request", not "OK"). Labels above inputs, never placeholder-as-label. Errors state what failed and how to fix it.
 - **typeset**: audit and fix the type system: roles, scale, measure, line height, Hebrew/Latin pairing, font loading.
 - **animate**: add purposeful motion per section 5. Name the one authored moment first.
 - **review**: report issues as a single table with columns `| Before | After | Why |`, one row per issue.
 
-## 7. Finish checklist
+## 8. Break it before the client does
+
+Templates are designed against kind demo content. Real clients paste in a 9-word business name, a long Gmail address, or a team section with one person. Before handing over, test the page with realistic worst-case content, never nonsense like "aaaaaaa".
+
+Try, on the actual widgets:
+- **Long Hebrew text:** a business or product name of 6-9 words, a long headline, a button label of 4 words, a long menu item.
+- **Unbreakable strings:** a long email (`office.yerushalmi.accounting@gmail.com`), a URL, a long English word inside Hebrew text.
+- **Mixed direction:** a phone number, a price with a currency sign, and an English brand name inside a Hebrew sentence. Punctuation must land on the correct side.
+- **Short and missing:** a 2-letter name, an empty optional field, a missing image, a testimonial without a photo.
+- **Counts:** exactly 1 item ("1 פריטים" is wrong), zero items, many items (a gallery of 40 images, a loop grid with 1 post).
+- **Environment:** 320px width, the real container width (a sidebar is not full width), browser zoom at 200%.
+
+Common breaks and fixes:
+
+| What you see | Fix |
+| --- | --- |
+| Email or URL runs past the edge | `overflow-wrap: anywhere` on that element |
+| Text overflows its flex box | `min-width: 0` on the text container |
+| Icon or avatar squished into an oval | `flex-shrink: 0` on the icon/image |
+| Button label wraps or overflows | Shorten the label, or let width come from content (no fixed width) |
+| Phone number or price reversed in RTL | Wrap in `<bdi>` or `unicode-bidi: isolate` |
+| Hebrew letters clipped top or bottom | Looser line-height, no `overflow: hidden` on text |
+| Empty line or stray dash where a field was empty | Hide the element when empty instead of rendering a placeholder |
+| Truncated text with no way to read it | Add a `title` or show the full text elsewhere |
+
+Report as a table: `| # | Severity | Element | Worst-case content | What happens | Fix |`, where severity is **Broken** (unreadable or unreachable), **Ugly** (readable but visibly wrong) or **Fragile** (fine now, one realistic step from breaking). Then list decisions that are the user's to make (truncate or wrap, what an empty field shows) with a recommendation, and what held up. Fix only after the user says which items to fix.
+
+## 9. Finish checklist
 
 Run once, fix everything in one batch, confirm once. Do not loop endlessly.
 
@@ -193,4 +259,6 @@ Run once, fix everything in one batch, confirm once. Do not loop endlessly.
 - [ ] Every interactive element has hover, focus, active and disabled states; forms have labels, errors and a success state.
 - [ ] Motion has a reason, honors reduced motion, does not run in the Elementor editor, and never hides content when JS fails.
 - [ ] Images are real (or clearly listed as needed), sized, lazy-loaded below the fold; hero image preloaded. No layout shift.
+- [ ] Mobile baseline in place: 16px inputs, no tap flash, hover gated, hero on `100svh`, theme-color set, nothing under the home indicator.
+- [ ] Worst-case content tried (section 8): long Hebrew names, long email, mixed direction, empty fields, 1 item, 320px, 200% zoom.
 - [ ] Every brief requirement is present and findable within seconds.
